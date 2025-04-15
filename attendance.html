@@ -23,19 +23,6 @@
   }
 </style>
 
-<!-- Put this on your page BEFORE the script below -->
-<div id="webchat" style="width: 500px; height: 500px;"></div>
-
-<!-- In your <body> tag -->
-<script>
-  window.botpress.on("webchat:ready", () => {
-    window.botpress.open();
-  });
-  window.botpress.init({
-  "selector": "#webchat"
-});
-</script>
-
 </head>
 <body>
     <div class="container">
@@ -113,6 +100,18 @@
             </section>
         </main>
     </div>
+    <!-- Put this on your page BEFORE the script below -->
+<div id="webchat" style="width: 500px; height: 500px;"></div>
+
+<!-- In your <body> tag -->
+<script>
+  window.botpress.on("webchat:ready", () => {
+    window.botpress.open();
+  });
+  window.botpress.init({
+  "selector": "#webchat"
+});
+</script>
 
     <script src="attendance.js"></script> 
 </body>
