@@ -4,6 +4,10 @@ document.getElementById('loginForm').addEventListener('submit', function(event) 
     login();
 });
 
+/**
+ * Handles the login process: validates input, checks credentials against localStorage,
+ * displays messages, and redirects on success.
+ */
 function login() {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
