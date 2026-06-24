@@ -24,6 +24,7 @@ header h1 {
     margin: 0;
 }
 
+/* The <marquee> tag is deprecated in HTML and should be avoided in production code. Consider using CSS animations or JavaScript for scrolling text in the future. */
 marquee {
     display: block;
     white-space: nowrap; 
