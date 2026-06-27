@@ -1,51 +1,95 @@
-let subjects = JSON.parse(localStorage.getItem('subjects')) || [];
+/*
+ * attendance.js
+ * -------------
+ * Handles subject management, attendance tracking, and user session features.
+ * Improvements: safer event handling, localStorage validation, code documentation, security, and maintainability.
+ */
 
-// Function to update the table with subjects data
+let subjects = [];
+try {
+    const stored = localStorage.getItem('subjects');
+    if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+            subjects = parsed;
+        }
+    }
+} catch (e) {
+    subjects = [];
+}
+
+/**
+ * Updates the subjects table and dropdown based on the current subjects array.
+ * Safely attaches event listeners for dynamic elements.
+ */
 function updateTable() {
     const tableBody = document.getElementById('subjectTable').getElementsByTagName('tbody')[0];
     tableBody.innerHTML = '';
 
     const subjectSelect = document.getElementById('selectedSubject');
-    subjectSelect.innerHTML = ''; // Clear existing options
+    subjectSelect.innerHTML = '';
 
     subjects.forEach((subject, index) => {
         const row = tableBody.insertRow();
         row.insertCell(0).textContent = subject.name;
         row.insertCell(1).textContent = subject.type;
-        
+
         // Total Hours with increment and decrement buttons
         const totalHoursCell = row.insertCell(2);
-        totalHoursCell.innerHTML = `
-            <button class="btn small-btn" onclick="changeTotalHours(${index}, -1)">-</button>
-            ${subject.totalHours}
-            <button class="btn small-btn" onclick="changeTotalHours(${index}, 1)">+</button>
-        `;
-        
+        totalHoursCell.textContent = '';
+        const decTotalBtn = document.createElement('button');
+        decTotalBtn.className = 'btn small-btn';
+        decTotalBtn.textContent = '-';
+        decTotalBtn.addEventListener('click', function() {
+            changeTotalHours(index, -1);
+        });
+        totalHoursCell.appendChild(decTotalBtn);
+        totalHoursCell.appendChild(document.createTextNode(` ${subject.totalHours} `));
+        const incTotalBtn = document.createElement('button');
+        incTotalBtn.className = 'btn small-btn';
+        incTotalBtn.textContent = '+';
+        incTotalBtn.addEventListener('click', function() {
+            changeTotalHours(index, 1);
+        });
+        totalHoursCell.appendChild(incTotalBtn);
+
         // Attended Hours with increment and decrement buttons
         const attendedHoursCell = row.insertCell(3);
-        attendedHoursCell.innerHTML = `
-            <button class="btn small-btn" onclick="changeAttendedHours(${index}, -1)">-</button>
-            ${subject.attendedHours}
-            <button class="btn small-btn" onclick="changeAttendedHours(${index}, 1)">+</button>
-        `;
+        attendedHoursCell.textContent = '';
+        const decAttBtn = document.createElement('button');
+        decAttBtn.className = 'btn small-btn';
+        decAttBtn.textContent = '-';
+        decAttBtn.addEventListener('click', function() {
+            changeAttendedHours(index, -1);
+        });
+        attendedHoursCell.appendChild(decAttBtn);
+        attendedHoursCell.appendChild(document.createTextNode(` ${subject.attendedHours} `));
+        const incAttBtn = document.createElement('button');
+        incAttBtn.className = 'btn small-btn';
+        incAttBtn.textContent = '+';
+        incAttBtn.addEventListener('click', function() {
+            changeAttendedHours(index, 1);
+        });
+        attendedHoursCell.appendChild(incAttBtn);
 
-        row.insertCell(4).textContent = `${subject.attendancePercentage.toFixed(2)}%`;
+        // Attendance percentage
+        row.insertCell(4).textContent = `${isFinite(subject.attendancePercentage) ? subject.attendancePercentage.toFixed(2) : '0.00'}%`;
 
         // Remove button with confirmation
         const actionsCell = row.insertCell(5);
         const removeButton = document.createElement('button');
         removeButton.textContent = 'Remove';
         removeButton.className = 'btn';
-        removeButton.onclick = () => {
+        removeButton.addEventListener('click', function() {
             if (confirm('Are you sure you want to remove this subject?')) {
                 subjects.splice(index, 1);
                 localStorage.setItem('subjects', JSON.stringify(subjects));
                 updateTable();
                 updateOverallAttendance();
             }
-        };
+        });
         actionsCell.appendChild(removeButton);
-        
+
         // Populate subject selection dropdown for adding classes
         const option = document.createElement('option');
         option.value = index;
@@ -56,36 +100,39 @@ function updateTable() {
     updateOverallAttendance();
 }
 
-// Function to add or update a subject
+/**
+ * Adds or updates a subject. Validates input fields for correctness.
+ */
 function addSubject() {
     const name = document.getElementById('subjectName').value.trim();
     const type = document.getElementById('subjectType').value;
-    const totalHours = parseInt(document.getElementById('totalHours').value, 10);
-    const attendedHours = parseInt(document.getElementById('attendedHours').value, 10);
+    const totalHoursRaw = document.getElementById('totalHours').value;
+    const attendedHoursRaw = document.getElementById('attendedHours').value;
+    const totalHours = Number(totalHoursRaw);
+    const attendedHours = Number(attendedHoursRaw);
 
-    if (name === '' || isNaN(totalHours) || isNaN(attendedHours)) {
+    if (name === '' || !isFinite(totalHours) || !isFinite(attendedHours) || totalHoursRaw === '' || attendedHoursRaw === '') {
         alert('Please fill in all fields correctly.');
         return;
     }
-    if (attendedHours>totalHours){
+    if (attendedHours > totalHours) {
         alert('Not valid: Attended hours cannot be more than total hours.');
         return;
     }
 
-    const existingSubject = subjects.find(subject => subject.name === name);
-
+    let existingSubject = subjects.find(subject => subject.name === name);
     if (existingSubject) {
         existingSubject.type = type;
         existingSubject.totalHours = totalHours;
         existingSubject.attendedHours = attendedHours;
-        existingSubject.attendancePercentage = (attendedHours / totalHours) * 100;
+        existingSubject.attendancePercentage = totalHours === 0 ? 0 : (attendedHours / totalHours) * 100;
     } else {
         subjects.push({
             name,
             type,
             totalHours,
             attendedHours,
-            attendancePercentage: (attendedHours / totalHours) * 100
+            attendancePercentage: totalHours === 0 ? 0 : (attendedHours / totalHours) * 100
         });
     }
 
@@ -94,57 +141,72 @@ function addSubject() {
     document.getElementById('subjectForm').reset();
 }
 
-// Function to change the attended hours (increment or decrement)
+/**
+ * Changes the attended hours for a subject, ensuring values remain valid.
+ * @param {number} index - Index of the subject in the subjects array.
+ * @param {number} change - +1 for increment, -1 for decrement.
+ */
 function changeAttendedHours(index, change) {
     const subject = subjects[index];
-    const increment = change > 0 ? 1.5 : 0.5; // Increment by 1.5 or decrement by 0.5
-    subject.attendedHours = Math.max(0, subject.attendedHours + (increment * change)); // Prevent negative attended hours
+    const increment = change > 0 ? 1.5 : 0.5;
+    let newValue = subject.attendedHours + (increment * change);
+    newValue = Math.max(0, newValue);
 
-    if (subject.attendedHours > subject.totalHours) {
+    if (newValue > subject.totalHours) {
         alert('Not valid: Attended hours cannot be more than total hours.');
-        subject.attendedHours -= increment * change; // Revert the change
         return;
     }
-
-    subject.attendancePercentage = (subject.attendedHours / subject.totalHours) * 100;
+    subject.attendedHours = newValue;
+    subject.attendancePercentage = subject.totalHours === 0 ? 0 : (subject.attendedHours / subject.totalHours) * 100;
     localStorage.setItem('subjects', JSON.stringify(subjects));
     updateTable();
 }
 
-// Function to change the total hours (increment or decrement)
+/**
+ * Changes the total hours for a subject, ensuring values remain valid.
+ * @param {number} index - Index of the subject in the subjects array.
+ * @param {number} change - +1 for increment, -1 for decrement.
+ */
 function changeTotalHours(index, change) {
     const subject = subjects[index];
-    const increment = change > 0 ? 1.5 : 0.5; // Increment by 1.5 or decrement by 0.5
-    subject.totalHours = Math.max(0, subject.totalHours + (increment * change)); // Prevent negative total hours
-
-    if (subject.attendedHours > subject.totalHours) {
+    const increment = change > 0 ? 1.5 : 0.5;
+    let newValue = subject.totalHours + (increment * change);
+    newValue = Math.max(0, newValue);
+    if (subject.attendedHours > newValue) {
         alert('Not valid: Attended hours cannot be more than total hours.');
-        subject.totalHours -= increment * change; // Revert the change
         return;
     }
-
-    subject.attendancePercentage = (subject.attendedHours / subject.totalHours) * 100;
+    subject.totalHours = newValue;
+    subject.attendancePercentage = subject.totalHours === 0 ? 0 : (subject.attendedHours / subject.totalHours) * 100;
     localStorage.setItem('subjects', JSON.stringify(subjects));
     updateTable();
 }
 
-// Function to add a class to a subject
-// Function to add a class to a subject
+/**
+ * Adds a class to the selected subject, adjusting total hours based on subject type.
+ * Validates inputs for correctness.
+ */
 function addClass() {
-    const subjectIndex = parseInt(document.getElementById('selectedSubject').value, 10);
+    const subjectIndexRaw = document.getElementById('selectedSubject').value;
+    const subjectIndex = Number(subjectIndexRaw);
     const classDate = document.getElementById('classDate').value;
 
-    if (isNaN(subjectIndex) || !classDate) {
+    if (!isFinite(subjectIndex) || subjectIndexRaw === '' || !classDate) {
         alert('Please select a subject and enter a class date.');
         return;
     }
 
     const subject = subjects[subjectIndex];
+    if (!subject) {
+        alert('Selected subject is invalid.');
+        return;
+    }
 
     // Adjust hours based on subject type (theory or lab)
-    const classDuration = subject.type === 'lab' ? 2 : 1.5; // 2 hours for lab, 1.5 hours for theory
+    let classDuration = subject.type === 'lab' ? 2 : 1.5;
+    if (!isFinite(classDuration) || classDuration <= 0) classDuration = 1.5;
     subject.totalHours += classDuration;
-    subject.attendancePercentage = (subject.attendedHours / subject.totalHours) * 100;
+    subject.attendancePercentage = subject.totalHours === 0 ? 0 : (subject.attendedHours / subject.totalHours) * 100;
 
     localStorage.setItem('subjects', JSON.stringify(subjects));
     updateTable();
@@ -152,24 +214,26 @@ function addClass() {
     document.getElementById('addClassSection').style.display = 'none';
 }
 
-
-// Function to update overall attendance percentage
+/**
+ * Updates the overall attendance percentage based on all subjects.
+ */
 function updateOverallAttendance() {
-    const totalHours = subjects.reduce((sum, subject) => sum + subject.totalHours, 0);
-    const totalAttended = subjects.reduce((sum, subject) => sum + subject.attendedHours, 0);
-
+    const totalHours = subjects.reduce((sum, subject) => sum + (isFinite(subject.totalHours) ? subject.totalHours : 0), 0);
+    const totalAttended = subjects.reduce((sum, subject) => sum + (isFinite(subject.attendedHours) ? subject.attendedHours : 0), 0);
     const overallPercentage = totalHours > 0 ? (totalAttended / totalHours) * 100 : 0;
     document.getElementById('overallAttendance').textContent = `${overallPercentage.toFixed(2)}%`;
 }
 
-// Function to handle Enter key to move to the next input field
+/**
+ * Handles Enter key navigation in the subject form inputs.
+ * Moves focus to the next input, or submits the form.
+ */
 function handleEnterKey(event) {
     if (event.key === 'Enter') {
-        event.preventDefault(); // Prevent the default form submission behavior
+        event.preventDefault();
         const inputs = Array.from(document.querySelectorAll('#subjectForm input'));
         const currentIndex = inputs.indexOf(event.target);
         const nextIndex = currentIndex + 1;
-
         if (nextIndex < inputs.length) {
             inputs[nextIndex].focus();
         } else {
@@ -178,29 +242,29 @@ function handleEnterKey(event) {
     }
 }
 
-// Attach keydown event listeners to input fields
-document.getElementById('subjectName').addEventListener('keydown', handleEnterKey);
-document.getElementById('totalHours').addEventListener('keydown', handleEnterKey);
-document.getElementById('attendedHours').addEventListener('keydown', handleEnterKey);
+// Attach keydown event listeners to input fields (only once on DOMContentLoaded for safety)
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('subjectName').addEventListener('keydown', handleEnterKey);
+    document.getElementById('totalHours').addEventListener('keydown', handleEnterKey);
+    document.getElementById('attendedHours').addEventListener('keydown', handleEnterKey);
+});
 
-// Initialize the table on page load
+// Initialize the table and welcome text on page load
 document.addEventListener('DOMContentLoaded', updateTable);
 document.addEventListener('DOMContentLoaded', function() {
-    const username = localStorage.getItem('username'); // Retrieve the username from localStorage
+    const username = localStorage.getItem('username');
     const welcomeMessage = document.getElementById('welcomeMessage');
-
     if (username) {
-        welcomeMessage.textContent = `Welcome, ${username}`; // Display the welcome message
+        welcomeMessage.textContent = `Welcome, ${username}`;
     } else {
         welcomeMessage.textContent = 'Welcome!';
     }
 });
 
-// Existing attendance.js functions go here...
-
-
-// Function to handle logout
+/**
+ * Logs the user out, removes username from localStorage, and redirects to login page.
+ */
 function logout() {
-    // Handle logout logic
+    localStorage.removeItem('username');
     window.location.href = 'login.html';
 }
