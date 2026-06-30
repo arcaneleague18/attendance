@@ -1,9 +1,22 @@
-/*
+/**
  * attendance.js
  * -------------
  * Handles subject management, attendance tracking, and user session features.
- * Improvements: safer event handling, localStorage validation, code documentation, security, and maintainability.
+ *
+ * Improvements:
+ * - Input sanitization to prevent XSS when updating DOM with user-provided data.
+ * - Safe localStorage access and validation.
+ * - Consistent comments, improved variable naming, and DOM existence checks.
+ *
+ * SECURITY WARNING: Do NOT use localStorage for sensitive user data (e.g., passwords) in production.
  */
+
+// Helper function to sanitize text for DOM insertion (prevents XSS)
+function sanitizeHTML(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
 let subjects = [];
 try {
@@ -23,16 +36,19 @@ try {
  * Safely attaches event listeners for dynamic elements.
  */
 function updateTable() {
-    const tableBody = document.getElementById('subjectTable').getElementsByTagName('tbody')[0];
-    tableBody.innerHTML = '';
-
+    const tableElem = document.getElementById('subjectTable');
     const subjectSelect = document.getElementById('selectedSubject');
+    if (!tableElem || !subjectSelect) return;
+
+    const tableBody = tableElem.getElementsByTagName('tbody')[0];
+    if (!tableBody) return;
+    tableBody.innerHTML = '';
     subjectSelect.innerHTML = '';
 
     subjects.forEach((subject, index) => {
         const row = tableBody.insertRow();
-        row.insertCell(0).textContent = subject.name;
-        row.insertCell(1).textContent = subject.type;
+        row.insertCell(0).innerHTML = sanitizeHTML(subject.name);
+        row.insertCell(1).innerHTML = sanitizeHTML(subject.type);
 
         // Total Hours with increment and decrement buttons
         const totalHoursCell = row.insertCell(2);
@@ -93,7 +109,7 @@ function updateTable() {
         // Populate subject selection dropdown for adding classes
         const option = document.createElement('option');
         option.value = index;
-        option.textContent = subject.name;
+        option.innerHTML = sanitizeHTML(subject.name);
         subjectSelect.appendChild(option);
     });
 
@@ -101,13 +117,25 @@ function updateTable() {
 }
 
 /**
- * Adds or updates a subject. Validates input fields for correctness.
+ * Adds or updates a subject. Validates input fields for correctness and sanitizes input.
  */
 function addSubject() {
-    const name = document.getElementById('subjectName').value.trim();
-    const type = document.getElementById('subjectType').value;
-    const totalHoursRaw = document.getElementById('totalHours').value;
-    const attendedHoursRaw = document.getElementById('attendedHours').value;
+    const nameElem = document.getElementById('subjectName');
+    const typeElem = document.getElementById('subjectType');
+    const totalHoursElem = document.getElementById('totalHours');
+    const attendedHoursElem = document.getElementById('attendedHours');
+
+    if (!nameElem || !typeElem || !totalHoursElem || !attendedHoursElem) {
+        alert('Form is not fully loaded.');
+        return;
+    }
+
+    const nameRaw = nameElem.value.trim();
+    const typeRaw = typeElem.value;
+    const totalHoursRaw = totalHoursElem.value;
+    const attendedHoursRaw = attendedHoursElem.value;
+    const name = sanitizeHTML(nameRaw);
+    const type = sanitizeHTML(typeRaw);
     const totalHours = Number(totalHoursRaw);
     const attendedHours = Number(attendedHoursRaw);
 
@@ -138,7 +166,8 @@ function addSubject() {
 
     localStorage.setItem('subjects', JSON.stringify(subjects));
     updateTable();
-    document.getElementById('subjectForm').reset();
+    const formElem = document.getElementById('subjectForm');
+    if (formElem) formElem.reset();
 }
 
 /**
@@ -148,6 +177,7 @@ function addSubject() {
  */
 function changeAttendedHours(index, change) {
     const subject = subjects[index];
+    if (!subject) return;
     const increment = change > 0 ? 1.5 : 0.5;
     let newValue = subject.attendedHours + (increment * change);
     newValue = Math.max(0, newValue);
@@ -169,6 +199,7 @@ function changeAttendedHours(index, change) {
  */
 function changeTotalHours(index, change) {
     const subject = subjects[index];
+    if (!subject) return;
     const increment = change > 0 ? 1.5 : 0.5;
     let newValue = subject.totalHours + (increment * change);
     newValue = Math.max(0, newValue);
@@ -187,9 +218,15 @@ function changeTotalHours(index, change) {
  * Validates inputs for correctness.
  */
 function addClass() {
-    const subjectIndexRaw = document.getElementById('selectedSubject').value;
+    const subjectSelectElem = document.getElementById('selectedSubject');
+    const classDateElem = document.getElementById('classDate');
+    if (!subjectSelectElem || !classDateElem) {
+        alert('Class form is not fully loaded.');
+        return;
+    }
+    const subjectIndexRaw = subjectSelectElem.value;
     const subjectIndex = Number(subjectIndexRaw);
-    const classDate = document.getElementById('classDate').value;
+    const classDate = classDateElem.value;
 
     if (!isFinite(subjectIndex) || subjectIndexRaw === '' || !classDate) {
         alert('Please select a subject and enter a class date.');
@@ -210,18 +247,22 @@ function addClass() {
 
     localStorage.setItem('subjects', JSON.stringify(subjects));
     updateTable();
-    document.getElementById('classForm').reset();
-    document.getElementById('addClassSection').style.display = 'none';
+    const classFormElem = document.getElementById('classForm');
+    const addClassSection = document.getElementById('addClassSection');
+    if (classFormElem) classFormElem.reset();
+    if (addClassSection) addClassSection.style.display = 'none';
 }
 
 /**
  * Updates the overall attendance percentage based on all subjects.
  */
 function updateOverallAttendance() {
+    const elem = document.getElementById('overallAttendance');
+    if (!elem) return;
     const totalHours = subjects.reduce((sum, subject) => sum + (isFinite(subject.totalHours) ? subject.totalHours : 0), 0);
     const totalAttended = subjects.reduce((sum, subject) => sum + (isFinite(subject.attendedHours) ? subject.attendedHours : 0), 0);
     const overallPercentage = totalHours > 0 ? (totalAttended / totalHours) * 100 : 0;
-    document.getElementById('overallAttendance').textContent = `${overallPercentage.toFixed(2)}%`;
+    elem.textContent = `${overallPercentage.toFixed(2)}%`;
 }
 
 /**
@@ -244,9 +285,12 @@ function handleEnterKey(event) {
 
 // Attach keydown event listeners to input fields (only once on DOMContentLoaded for safety)
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('subjectName').addEventListener('keydown', handleEnterKey);
-    document.getElementById('totalHours').addEventListener('keydown', handleEnterKey);
-    document.getElementById('attendedHours').addEventListener('keydown', handleEnterKey);
+    const subjectName = document.getElementById('subjectName');
+    const totalHours = document.getElementById('totalHours');
+    const attendedHours = document.getElementById('attendedHours');
+    if (subjectName) subjectName.addEventListener('keydown', handleEnterKey);
+    if (totalHours) totalHours.addEventListener('keydown', handleEnterKey);
+    if (attendedHours) attendedHours.addEventListener('keydown', handleEnterKey);
 });
 
 // Initialize the table and welcome text on page load
@@ -254,10 +298,12 @@ document.addEventListener('DOMContentLoaded', updateTable);
 document.addEventListener('DOMContentLoaded', function() {
     const username = localStorage.getItem('username');
     const welcomeMessage = document.getElementById('welcomeMessage');
-    if (username) {
-        welcomeMessage.textContent = `Welcome, ${username}`;
-    } else {
-        welcomeMessage.textContent = 'Welcome!';
+    if (welcomeMessage) {
+        if (username) {
+            welcomeMessage.innerHTML = sanitizeHTML(`Welcome, ${username}`);
+        } else {
+            welcomeMessage.textContent = 'Welcome!';
+        }
     }
 });
 
