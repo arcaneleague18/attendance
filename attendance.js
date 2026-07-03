@@ -9,6 +9,7 @@
  * - Consistent comments, improved variable naming, and DOM existence checks.
  *
  * SECURITY WARNING: Do NOT use localStorage for sensitive user data (e.g., passwords) in production.
+ * TODO: Replace localStorage with secure backend storage for sensitive data in production.
  */
 
 // Helper function to sanitize text for DOM insertion (prevents XSS)
@@ -18,6 +19,7 @@ function sanitizeHTML(text) {
     return div.innerHTML;
 }
 
+// Load subjects from localStorage safely
 let subjects = [];
 try {
     const stored = localStorage.getItem('subjects');
@@ -34,6 +36,7 @@ try {
 /**
  * Updates the subjects table and dropdown based on the current subjects array.
  * Safely attaches event listeners for dynamic elements.
+ * Note: All DOM insertions of user-provided data are sanitized.
  */
 function updateTable() {
     const tableElem = document.getElementById('subjectTable');
@@ -47,6 +50,7 @@ function updateTable() {
 
     subjects.forEach((subject, index) => {
         const row = tableBody.insertRow();
+        // SECURITY: Sanitize user-provided subject names and types
         row.insertCell(0).innerHTML = sanitizeHTML(subject.name);
         row.insertCell(1).innerHTML = sanitizeHTML(subject.type);
 
@@ -109,6 +113,7 @@ function updateTable() {
         // Populate subject selection dropdown for adding classes
         const option = document.createElement('option');
         option.value = index;
+        // SECURITY: Sanitize subject name
         option.innerHTML = sanitizeHTML(subject.name);
         subjectSelect.appendChild(option);
     });
@@ -118,6 +123,8 @@ function updateTable() {
 
 /**
  * Adds or updates a subject. Validates input fields for correctness and sanitizes input.
+ * - If subject with same name exists, updates its details.
+ * - Otherwise, adds a new subject.
  */
 function addSubject() {
     const nameElem = document.getElementById('subjectName');
@@ -134,6 +141,7 @@ function addSubject() {
     const typeRaw = typeElem.value;
     const totalHoursRaw = totalHoursElem.value;
     const attendedHoursRaw = attendedHoursElem.value;
+    // SECURITY: Sanitize all user inputs before DOM insertions
     const name = sanitizeHTML(nameRaw);
     const type = sanitizeHTML(typeRaw);
     const totalHours = Number(totalHoursRaw);
@@ -148,6 +156,7 @@ function addSubject() {
         return;
     }
 
+    // Check if subject already exists (by sanitized name)
     let existingSubject = subjects.find(subject => subject.name === name);
     if (existingSubject) {
         existingSubject.type = type;
@@ -216,6 +225,8 @@ function changeTotalHours(index, change) {
 /**
  * Adds a class to the selected subject, adjusting total hours based on subject type.
  * Validates inputs for correctness.
+ *
+ * Note: For labs, class duration is 2 hours. For theory, 1.5 hours.
  */
 function addClass() {
     const subjectSelectElem = document.getElementById('selectedSubject');
@@ -299,6 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const username = localStorage.getItem('username');
     const welcomeMessage = document.getElementById('welcomeMessage');
     if (welcomeMessage) {
+        // SECURITY: Sanitize username before DOM insertion
         if (username) {
             welcomeMessage.innerHTML = sanitizeHTML(`Welcome, ${username}`);
         } else {
@@ -314,3 +326,5 @@ function logout() {
     localStorage.removeItem('username');
     window.location.href = 'login.html';
 }
+
+// NOTE: <marquee> is deprecated in HTML. Consider replacing with CSS/JS animations in future.
