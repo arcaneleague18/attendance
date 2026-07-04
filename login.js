@@ -5,6 +5,7 @@
  * user session, and safe user message display.
  *
  * SECURITY: Do NOT store sensitive passwords in localStorage in production!
+ * TODO: Replace password storage with secure authentication for production use.
  */
 
 // Helper function to sanitize text to prevent XSS
@@ -29,6 +30,8 @@ if (loginForm) {
 /**
  * Handles the login process: validates input, checks credentials against localStorage,
  * displays sanitized messages, and redirects on success.
+ *
+ * SECURITY: Only safe to use in a demo environment. In production, never store passwords in localStorage.
  */
 function login() {
     const usernameInput = document.getElementById('username');
@@ -47,11 +50,12 @@ function login() {
     messageElem.textContent = '';
 
     if (username === '' || password === '') {
+        // Use .innerHTML with sanitized text (safe)
         messageElem.innerHTML = sanitize('Please enter both username and password.');
         return;
     }
 
-    // Check credentials
+    // Check credentials in localStorage (NOT recommended for production)
     let users = [];
     try {
         users = JSON.parse(localStorage.getItem('users')) || [];
@@ -61,10 +65,17 @@ function login() {
     const user = users.find(user => user.username === username && user.password === password);
 
     if (user) {
-        // Store the username and redirect
-        localStorage.setItem('username', username);
+        // Store the username and redirect (try-catch to be robust against quota errors)
+        try {
+            localStorage.setItem('username', username);
+        } catch (e) {
+            // Could not save to localStorage (possibly quota exceeded)
+            messageElem.innerHTML = sanitize('Unable to complete login. Please try again.');
+            return;
+        }
         window.location.href = 'attendance.html'; // Update with your actual tracker page URL
     } else {
+        // Use .innerHTML with sanitized text (safe)
         messageElem.innerHTML = sanitize('Invalid username or password.');
     }
 }
