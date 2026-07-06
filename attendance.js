@@ -12,7 +12,12 @@
  * TODO: Replace localStorage with secure backend storage for sensitive data in production.
  */
 
-// Helper function to sanitize text for DOM insertion (prevents XSS)
+/**
+ * Helper function to sanitize text for DOM insertion (prevents XSS).
+ * SECURITY: Always sanitize user-provided data before inserting into the DOM.
+ * @param {string} text - The text to sanitize.
+ * @returns {string} Sanitized HTML string.
+ */
 function sanitizeHTML(text) {
     const div = document.createElement('div');
     div.textContent = text;

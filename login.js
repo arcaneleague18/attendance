@@ -8,7 +8,11 @@
  * TODO: Replace password storage with secure authentication for production use.
  */
 
-// Helper function to sanitize text to prevent XSS
+/**
+ * Sanitizes a string for safe DOM insertion to prevent XSS attacks.
+ * @param {string} text - The text to sanitize.
+ * @returns {string} Sanitized HTML string.
+ */
 function sanitize(text) {
     const div = document.createElement('div');
     div.textContent = text;
@@ -16,7 +20,7 @@ function sanitize(text) {
 }
 
 /**
- * Attach submit event handler to login form.
+ * Attaches submit event handler to the login form.
  * Prevents default submission and triggers login logic.
  */
 const loginForm = document.getElementById('loginForm');
@@ -58,7 +62,13 @@ function login() {
     // Check credentials in localStorage (NOT recommended for production)
     let users = [];
     try {
-        users = JSON.parse(localStorage.getItem('users')) || [];
+        const usersStr = localStorage.getItem('users');
+        if (usersStr) {
+            users = JSON.parse(usersStr);
+            if (!Array.isArray(users)) {
+                users = [];
+            }
+        }
     } catch (e) {
         users = [];
     }

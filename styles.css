@@ -1,3 +1,10 @@
+/*
+ * styles.css
+ * ----------
+ * Provides general styles for the attendance tracker application, including layout, buttons,
+ * forms, tables, and header.
+ */
+
 /* General Styles */
 body {
     font-family: Arial, sans-serif;
