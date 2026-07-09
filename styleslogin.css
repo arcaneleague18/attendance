@@ -88,3 +88,7 @@ input[type="password"] {
 .signup-link a {
     color:rgb(240, 130, 231) ;
 }
+
+/*
+ * NOTE: This CSS file is only for the login page. For general site-wide styles, see styles.css.
+ */

@@ -20,8 +20,8 @@ function sanitize(text) {
 }
 
 /**
- * Attaches submit event handler to the login form.
- * Prevents default submission and triggers login logic.
+ * Reference to the login form element.
+ * @type {?HTMLFormElement}
  */
 const loginForm = document.getElementById('loginForm');
 if (loginForm) {
@@ -36,10 +36,15 @@ if (loginForm) {
  * displays sanitized messages, and redirects on success.
  *
  * SECURITY: Only safe to use in a demo environment. In production, never store passwords in localStorage.
+ *
+ * @returns {void}
  */
 function login() {
+    /** @type {?HTMLInputElement} */
     const usernameInput = document.getElementById('username');
+    /** @type {?HTMLInputElement} */
     const passwordInput = document.getElementById('password');
+    /** @type {?HTMLElement} */
     const messageElem = document.getElementById('message');
 
     if (!usernameInput || !passwordInput || !messageElem) {
@@ -70,6 +75,7 @@ function login() {
             }
         }
     } catch (e) {
+        // If JSON parsing fails or quota error, fallback to empty users array
         users = [];
     }
     const user = users.find(user => user.username === username && user.password === password);
@@ -83,6 +89,7 @@ function login() {
             messageElem.innerHTML = sanitize('Unable to complete login. Please try again.');
             return;
         }
+        // TODO: Make sure this URL is up to date with the actual tracker page
         window.location.href = 'attendance.html'; // Update with your actual tracker page URL
     } else {
         // Use .innerHTML with sanitized text (safe)

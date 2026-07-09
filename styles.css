@@ -32,6 +32,7 @@ header h1 {
 }
 
 /* The <marquee> tag is deprecated in HTML and should be avoided in production code. Consider using CSS animations or JavaScript for scrolling text in the future. */
+/* TODO: Replace <marquee> with a modern CSS/JS animation for scrolling messages. */
 marquee {
     display: block;
     white-space: nowrap; 
@@ -126,3 +127,5 @@ th {
     padding: 20px;
     border-radius: 5px;
 }
+
+/* End of styles.css */
