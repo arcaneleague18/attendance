@@ -10,6 +10,7 @@
  *
  * SECURITY WARNING: Do NOT use localStorage for sensitive user data (e.g., passwords) in production.
  * TODO: Replace localStorage with secure backend storage for sensitive data in production.
+ * TODO: Add comprehensive unit tests for all input handling and DOM update scenarios.
  */
 
 /**
@@ -35,6 +36,8 @@ try {
         }
     }
 } catch (e) {
+    // Optionally log error for debugging
+    // console.error('Failed to parse subjects from localStorage:', e);
     subjects = [];
 }
 
@@ -42,6 +45,7 @@ try {
  * Updates the subjects table and dropdown based on the current subjects array.
  * Safely attaches event listeners for dynamic elements.
  * Note: All DOM insertions of user-provided data are sanitized.
+ * @returns {void}
  */
 function updateTable() {
     const tableElem = document.getElementById('subjectTable');
@@ -130,6 +134,7 @@ function updateTable() {
  * Adds or updates a subject. Validates input fields for correctness and sanitizes input.
  * - If subject with same name exists, updates its details.
  * - Otherwise, adds a new subject.
+ * @returns {void}
  */
 function addSubject() {
     const nameElem = document.getElementById('subjectName');
@@ -188,6 +193,7 @@ function addSubject() {
  * Changes the attended hours for a subject, ensuring values remain valid.
  * @param {number} index - Index of the subject in the subjects array.
  * @param {number} change - +1 for increment, -1 for decrement.
+ * @returns {void}
  */
 function changeAttendedHours(index, change) {
     const subject = subjects[index];
@@ -210,6 +216,7 @@ function changeAttendedHours(index, change) {
  * Changes the total hours for a subject, ensuring values remain valid.
  * @param {number} index - Index of the subject in the subjects array.
  * @param {number} change - +1 for increment, -1 for decrement.
+ * @returns {void}
  */
 function changeTotalHours(index, change) {
     const subject = subjects[index];
@@ -232,6 +239,7 @@ function changeTotalHours(index, change) {
  * Validates inputs for correctness.
  *
  * Note: For labs, class duration is 2 hours. For theory, 1.5 hours.
+ * @returns {void}
  */
 function addClass() {
     const subjectSelectElem = document.getElementById('selectedSubject');
@@ -271,6 +279,7 @@ function addClass() {
 
 /**
  * Updates the overall attendance percentage based on all subjects.
+ * @returns {void}
  */
 function updateOverallAttendance() {
     const elem = document.getElementById('overallAttendance');
@@ -284,6 +293,8 @@ function updateOverallAttendance() {
 /**
  * Handles Enter key navigation in the subject form inputs.
  * Moves focus to the next input, or submits the form.
+ * @param {KeyboardEvent} event - The keydown event object.
+ * @returns {void}
  */
 function handleEnterKey(event) {
     if (event.key === 'Enter') {
@@ -326,6 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /**
  * Logs the user out, removes username from localStorage, and redirects to login page.
+ * @returns {void}
  */
 function logout() {
     localStorage.removeItem('username');
