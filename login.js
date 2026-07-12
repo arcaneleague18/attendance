@@ -20,24 +20,16 @@ function sanitize(text) {
 }
 
 /**
- * Attaches submit event handler to the login form.
- * Prevents default submission and triggers login logic.
- */
-const loginForm = document.getElementById('loginForm');
-if (loginForm) {
-    loginForm.addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent default form submission to handle login via JavaScript
-        login();
-    });
-}
-
-/**
  * Handles the login process: validates input, checks credentials against localStorage,
  * displays sanitized messages, and redirects on success.
  *
  * SECURITY: Only safe to use in a demo environment. In production, never store passwords in localStorage.
+ * @returns {void}
  */
 function login() {
+    /**
+     * TODO: Ensure #username is of type "text" and #password is of type "password" for accessibility/security.
+     */
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const messageElem = document.getElementById('message');
@@ -70,6 +62,8 @@ function login() {
             }
         }
     } catch (e) {
+        // Optionally log error for debugging (never expose sensitive info to users)
+        // console.error('Failed to parse users from localStorage:', e);
         users = [];
     }
     const user = users.find(user => user.username === username && user.password === password);
@@ -88,4 +82,17 @@ function login() {
         // Use .innerHTML with sanitized text (safe)
         messageElem.innerHTML = sanitize('Invalid username or password.');
     }
+}
+
+/**
+ * Attaches submit event handler to the login form.
+ * Prevents default submission and triggers login logic.
+ * This block runs immediately when login.js is loaded.
+ */
+const loginForm = document.getElementById('loginForm');
+if (loginForm) {
+    loginForm.addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent default form submission to handle login via JavaScript
+        login();
+    });
 }
