@@ -191,6 +191,7 @@ function addSubject() {
 
 /**
  * Changes the attended hours for a subject, ensuring values remain valid.
+ * The increment is 1.5 for +1 and 0.5 for -1 (see logic), reflecting typical theory/lab durations.
  * @param {number} index - Index of the subject in the subjects array.
  * @param {number} change - +1 for increment, -1 for decrement.
  * @returns {void}
@@ -198,6 +199,7 @@ function addSubject() {
 function changeAttendedHours(index, change) {
     const subject = subjects[index];
     if (!subject) return;
+    // If change positive, increment by 1.5; if negative, decrement by 0.5
     const increment = change > 0 ? 1.5 : 0.5;
     let newValue = subject.attendedHours + (increment * change);
     newValue = Math.max(0, newValue);
@@ -214,6 +216,7 @@ function changeAttendedHours(index, change) {
 
 /**
  * Changes the total hours for a subject, ensuring values remain valid.
+ * The increment is 1.5 for +1 and 0.5 for -1 (see logic), reflecting typical theory/lab durations.
  * @param {number} index - Index of the subject in the subjects array.
  * @param {number} change - +1 for increment, -1 for decrement.
  * @returns {void}
@@ -221,6 +224,7 @@ function changeAttendedHours(index, change) {
 function changeTotalHours(index, change) {
     const subject = subjects[index];
     if (!subject) return;
+    // If change positive, increment by 1.5; if negative, decrement by 0.5
     const increment = change > 0 ? 1.5 : 0.5;
     let newValue = subject.totalHours + (increment * change);
     newValue = Math.max(0, newValue);
