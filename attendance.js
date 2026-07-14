@@ -16,6 +16,7 @@
 /**
  * Helper function to sanitize text for DOM insertion (prevents XSS).
  * SECURITY: Always sanitize user-provided data before inserting into the DOM.
+ * TODO: Add unit tests to verify all output from sanitizeHTML is safe for DOM insertion.
  * @param {string} text - The text to sanitize.
  * @returns {string} Sanitized HTML string.
  */

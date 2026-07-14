@@ -28,7 +28,9 @@ function sanitize(text) {
  */
 function login() {
     /**
-     * TODO: Ensure #username is of type "text" and #password is of type "password" for accessibility/security.
+     * Ensure #username is of type "text" and #password is of type "password" for accessibility/security.
+     * This runtime check ensures that even if the HTML is misconfigured, we enforce expected types here.
+     * It does NOT guarantee security, but is a good hardening step.
      */
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
@@ -37,6 +39,14 @@ function login() {
     if (!usernameInput || !passwordInput || !messageElem) {
         // Required elements not found; cannot proceed.
         return;
+    }
+
+    // Defensive: Enforce correct input types for security/accessibility
+    if (usernameInput.type !== 'text') {
+        usernameInput.type = 'text';
+    }
+    if (passwordInput.type !== 'password') {
+        passwordInput.type = 'password';
     }
 
     const username = usernameInput.value.trim();
@@ -88,6 +98,8 @@ function login() {
  * Attaches submit event handler to the login form.
  * Prevents default submission and triggers login logic.
  * This block runs immediately when login.js is loaded.
+ *
+ * TODO: Add unit tests for login form event and credential validation logic.
  */
 const loginForm = document.getElementById('loginForm');
 if (loginForm) {
