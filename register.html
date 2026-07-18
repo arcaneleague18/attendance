@@ -20,7 +20,6 @@
             background-size: cover;
             background-position: center;
             transition: background-color 0.3s, background-image 0.3s;
-        
         }
         .container {
             width: 300px;
@@ -71,6 +70,10 @@
         .message {
             margin-top: 10px;
             color: #e53935;
+            min-height: 18px;
+        }
+        .message.success {
+            color: #4CAF50;
         }
         .link {
             margin-top: 10px;
@@ -79,7 +82,6 @@
         .link a{
             color: rgb(240, 130, 231);
         }
-
     </style>
 </head>
 <body>
@@ -88,48 +90,96 @@
         <form id="signupForm" onsubmit="return signup(event)">
             <div class="input-group">
                 <label for="newUsername">Username:</label>
-                <input type="text" id="newUsername" placeholder="Enter your username" required>
+                <input type="text" id="newUsername" placeholder="Enter your username" required autocomplete="username">
             </div>
             <div class="input-group">
                 <label for="newPassword">Password:</label>
-                <input type="password" id="newPassword" placeholder="Enter your password" required>
+                <input type="password" id="newPassword" placeholder="Enter your password" required autocomplete="new-password">
             </div>
             <button type="submit" class="btn">Sign Up</button>
         </form>
-        <div id="message" class="message"></div>
+        <div id="message" class="message" aria-live="polite"></div>
         <div class="link">
             <a href="login.html">Login if account exists</a>
         </div>
     </div>
 
     <script>
+        /**
+         * Escapes HTML special characters to prevent XSS in user messages.
+         * @param {string} str
+         * @returns {string}
+         */
+        function sanitize(str) {
+            const div = document.createElement('div');
+            div.textContent = String(str);
+            return div.innerHTML;
+        }
+
+        /**
+         * Handles signup form submission.
+         * Performs basic validation and saves new user to localStorage.
+         * Note: Do NOT store passwords in localStorage in production!
+         * @param {Event} event
+         * @returns {boolean}
+         */
         function signup(event) {
             event.preventDefault(); // Prevent the form from submitting normally
+
+            const messageElem = document.getElementById('message');
+            messageElem.classList.remove('success');
+            let error = '';
 
             const username = document.getElementById('newUsername').value.trim();
             const password = document.getElementById('newPassword').value.trim();
 
-            if (username === '' || password === '') {
-                document.getElementById('message').textContent = 'Please fill in all fields.';
-                return;
+            // Defensive: Ensure username and password are strings
+            if (typeof username !== 'string' || typeof password !== 'string') {
+                error = 'Invalid input.';
+            } else if (username === '' || password === '') {
+                error = 'Please fill in all fields.';
             }
 
-            // Retrieve users from localStorage
-            const users = JSON.parse(localStorage.getItem('users')) || [];
+            if (error) {
+                messageElem.innerHTML = sanitize(error);
+                return false;
+            }
 
-            // Check if the username already exists
+            // Retrieve users from localStorage, ensuring array structure
+            let users = [];
+            try {
+                const stored = localStorage.getItem('users');
+                if (stored) {
+                    users = JSON.parse(stored);
+                    if (!Array.isArray(users)) users = [];
+                }
+            } catch (e) {
+                users = [];
+            }
+
+            // Check if the username already exists (case-sensitive)
             if (users.some(user => user.username === username)) {
-                document.getElementById('message').textContent = 'Username already taken.';
-                return;
+                messageElem.innerHTML = sanitize('Username already taken.');
+                return false;
             }
 
             // Add new user to the users array
             users.push({ username, password });
+            try {
+                localStorage.setItem('users', JSON.stringify(users));
+            } catch (e) {
+                messageElem.innerHTML = sanitize('Failed to save user. Please try again.');
+                return false;
+            }
 
-            // Save users back to localStorage
-            localStorage.setItem('users', JSON.stringify(users));
-
-            window.location.href = 'login.html';
+            // Provide feedback & redirect
+            messageElem.textContent = '';
+            messageElem.classList.add('success');
+            messageElem.innerHTML = sanitize('Signup successful! Redirecting to login...');
+            setTimeout(function() {
+                window.location.href = 'login.html';
+            }, 1000);
+            return false;
         }
     </script>
 </body>
