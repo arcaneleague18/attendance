@@ -101,10 +101,17 @@ function login() {
  *
  * TODO: Add unit tests for login form event and credential validation logic.
  */
-const loginForm = document.getElementById('loginForm');
-if (loginForm) {
-    loginForm.addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent default form submission to handle login via JavaScript
-        login();
-    });
-}
+(function() {
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission to handle login via JavaScript
+            login();
+        });
+    }
+    // Accessibility: Focus username input on page load if available
+    const usernameInput = document.getElementById('username');
+    if (usernameInput) {
+        usernameInput.focus();
+    }
+})();
